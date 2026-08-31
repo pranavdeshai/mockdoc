@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NEET-PG Exam Simulator</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Global Application Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="brand-logo">
+          <svg
+            class="icon-brand"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+          </svg>
+        </div>
+        <h1 class="header-title">NEET-PG Exam Simulator</h1>
+      </div>
+      <div class="header-right" id="header-actions">
+        <!-- Theme Switcher (Left: Sun / Right: Moon) -->
+        <div class="theme-toggle-wrapper">
+          <svg
+            class="icon sun-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <label class="switch">
+            <input
+              type="checkbox"
+              id="theme-toggle-btn"
+              aria-label="Toggle dark/light mode"
+            />
+            <span class="slider round"></span>
+          </label>
+          <svg
+            class="icon moon-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </div>
+
+        <!-- Action Buttons Injected by Views -->
+        <div id="dynamic-nav-actions"></div>
+      </div>
+    </header>
+
+    <!-- Main View Container -->
+    <main id="app-root">
+      <!-- 1. INDEX / HOME VIEW -->
+      <section id="view-home" class="view-panel active">
+        <div class="home-dialog-card">
+          <div class="dialog-header">
+            <h2>Load Mock Examination</h2>
+            <p class="dialog-subtitle">
+              Upload a valid examination JSON file or paste the raw
+              configuration payload to begin your CBT session.
+            </p>
+          </div>
+
+          <div class="upload-zone" id="drop-zone">
+            <input
+              type="file"
+              id="json-file-input"
+              accept=".json"
+              class="file-input-hidden"
+            />
+            <svg
+              class="icon upload-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <p>
+              Drag and drop <code>questions.json</code> here or
+              <button type="button" class="btn-link" id="browse-btn">
+                browse files
+              </button>
+            </p>
+            <span id="file-name-display" class="file-name-tag"></span>
+          </div>
+
+          <div class="divider-text"><span>OR PASTE JSON</span></div>
+
+          <div class="paste-zone">
+            <textarea
+              id="json-text-input"
+              placeholder="Paste your question bank JSON configuration here..."
+              rows="5"
+            ></textarea>
+          </div>
+
+          <!-- Validation Notice -->
+          <div id="validation-alert" class="alert-box alert-warning hidden">
+            <svg
+              class="icon alert-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+              ></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            <span id="validation-msg"
+              >Invalid format: Ensure required structure exists.</span
+            >
+          </div>
+
+          <div class="dialog-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="load-sample-btn"
+            >
+              Load Default Sample
+            </button>
+            <button
+              type="button"
+              class="btn btn-start"
+              id="start-exam-btn"
+              disabled
+            >
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              Start Exam
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. EXAM / CBT VIEW -->
+      <section id="view-exam" class="view-panel hidden">
+        <!-- Section Navigation Bar with Right-Aligned Palette Toggle Button -->
+        <nav class="sections-navbar">
+          <div class="sections-tabs-track" id="sections-bar"></div>
+          <button
+            type="button"
+            class="btn btn-secondary palette-toggle-nav-btn"
+            id="btn-palette-nav-toggle"
+            aria-label="Open Question Palette"
+          >
+            <svg
+              class="icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            <span>Palette</span>
+          </button>
+        </nav>
+
+        <!-- Exam Workspace -->
+        <div class="exam-workspace">
+          <!-- Question Workspace (Left) -->
+          <div class="question-column">
+            <div class="question-header">
+              <span class="question-counter" id="exam-q-number"
+                >Question No. --</span
+              >
+            </div>
+
+            <div class="question-body">
+              <div class="question-text" id="exam-q-text">
+                Loading question text...
+              </div>
+              <div class="options-container" id="exam-options-list"></div>
+            </div>
+
+            <!-- Question Footer Navigation Actions -->
+            <footer class="question-footer">
+              <div class="action-group-left">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  id="btn-mark-review"
+                >
+                  <svg
+                    class="icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
+                    ></path>
+                  </svg>
+                  Mark for Review &amp; Next
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  id="btn-clear-response"
+                >
+                  <svg
+                    class="icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path
+                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    ></path>
+                  </svg>
+                  Clear Response
+                </button>
+              </div>
+              <div class="action-group-right">
+                <button type="button" class="btn btn-secondary" id="btn-prev-q">
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  id="btn-save-next"
+                >
+                  Save &amp; Next
+                </button>
+              </div>
+            </footer>
+          </div>
+
+          <!-- Progress & Palette Section (Right) -->
+          <aside class="progress-column" id="exam-progress-sidebar">
+            <!-- Status Legend / Counters with Numbers Inside the Badges -->
+            <div class="palette-legend">
+              <div class="legend-item">
+                <span class="symbol-badge symbol-answered" id="count-answered"
+                  >0</span
+                >
+                <span class="legend-label">Answered</span>
+              </div>
+              <div class="legend-item">
+                <span
+                  class="symbol-badge symbol-not-answered"
+                  id="count-not-answered"
+                  >0</span
+                >
+                <span class="legend-label">Not Answered</span>
+              </div>
+              <div class="legend-item">
+                <span
+                  class="symbol-badge symbol-not-visited"
+                  id="count-not-visited"
+                  >0</span
+                >
+                <span class="legend-label">Not Visited</span>
+              </div>
+              <div class="legend-item">
+                <span class="symbol-badge symbol-marked" id="count-marked"
+                  >0</span
+                >
+                <span class="legend-label">Marked for Review</span>
+              </div>
+              <div class="legend-item legend-item-full">
+                <span
+                  class="symbol-badge symbol-ans-marked"
+                  id="count-ans-marked"
+                  >0</span
+                >
+                <span class="legend-label">Ans &amp; Marked for Review</span>
+              </div>
+            </div>
+
+            <!-- Section Information & Timer -->
+            <div class="section-timer-card">
+              <span class="active-sec-name" id="timer-sec-label"
+                >Section A</span
+              >
+              <div class="timer-countdown">
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span id="section-clock-display">00:20:00</span>
+              </div>
+            </div>
+
+            <!-- Question Grid Palette -->
+            <div class="palette-grid-wrapper">
+              <div class="palette-grid" id="exam-palette-grid"></div>
+            </div>
+
+            <!-- Submit Section Action -->
+            <div class="palette-footer">
+              <button
+                type="button"
+                class="btn btn-warning-submit"
+                id="btn-submit-section"
+              >
+                Submit Section
+              </button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- 3. PERFORMANCE REVIEW / ANALYTICS VIEW -->
+      <section id="view-review" class="view-panel hidden">
+        <!-- Top Dashboard KPI Metric Tiles -->
+        <div class="kpi-dashboard-grid">
+          <div class="kpi-card">
+            <span class="kpi-title">Total Score</span>
+            <span class="kpi-value" id="kpi-total-score">0</span>
+            <span class="kpi-sub" id="kpi-max-score">Max: 80</span>
+          </div>
+          <div class="kpi-card kpi-success">
+            <span class="kpi-title">Correct</span>
+            <span class="kpi-value" id="kpi-correct-count">0</span>
+            <span class="kpi-sub" id="kpi-correct-score">+0 Marks</span>
+          </div>
+          <div class="kpi-card kpi-danger">
+            <span class="kpi-title">Incorrect</span>
+            <span class="kpi-value" id="kpi-incorrect-count">0</span>
+            <span class="kpi-sub" id="kpi-incorrect-score">-0 Marks</span>
+          </div>
+          <div class="kpi-card kpi-muted">
+            <span class="kpi-title">Unattempted</span>
+            <span class="kpi-value" id="kpi-unattempted-count">0</span>
+            <span class="kpi-sub" id="kpi-unattempted-rate">0% of Test</span>
+          </div>
+          <div class="kpi-card kpi-info">
+            <span class="kpi-title">Accuracy</span>
+            <span class="kpi-value" id="kpi-accuracy-pct">0%</span>
+            <span class="kpi-sub" id="kpi-attempt-rate">Attempt Rate: 0%</span>
+          </div>
+        </div>
+
+        <!-- 3-Column Analytics Workspace -->
+        <div class="analytics-workspace">
+          <!-- Col 1: Tab Menu Navigation -->
+          <aside class="analytics-nav-col">
+            <nav class="analytics-tabs-list" id="analytics-tabs-nav">
+              <button
+                type="button"
+                class="tab-btn active"
+                data-tab="tab-question-review"
+              >
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                  ></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+                Question Review
+              </button>
+              <button
+                type="button"
+                class="tab-btn"
+                data-tab="tab-section-analysis"
+              >
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                Section Analysis
+              </button>
+              <button
+                type="button"
+                class="tab-btn"
+                data-tab="tab-subject-analysis"
+              >
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                  <path
+                    d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+                  ></path>
+                </svg>
+                Subject Analysis
+              </button>
+              <button
+                type="button"
+                class="tab-btn"
+                data-tab="tab-system-analysis"
+              >
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path
+                    d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"
+                  ></path>
+                  <path d="M2 12h20"></path>
+                </svg>
+                System Analysis
+              </button>
+              <button
+                type="button"
+                class="tab-btn"
+                data-tab="tab-time-analysis"
+              >
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                Time Analysis
+              </button>
+              <button
+                type="button"
+                class="tab-btn"
+                data-tab="tab-difficulty-analysis"
+              >
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                Difficulty Breakdown
+              </button>
+              <button
+                type="button"
+                class="tab-btn"
+                data-tab="tab-format-analysis"
+              >
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="8" y1="6" x2="21" y2="6"></line>
+                  <line x1="8" y1="12" x2="21" y2="12"></line>
+                  <line x1="8" y1="18" x2="21" y2="18"></line>
+                  <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                  <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                  <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                </svg>
+                Question Formats
+              </button>
+              <button
+                type="button"
+                class="tab-btn"
+                data-tab="tab-behavior-analysis"
+              >
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path
+                    d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"
+                  ></path>
+                </svg>
+                Behavioural Analysis
+              </button>
+            </nav>
+
+            <div class="sidebar-action-box">
+              <button
+                type="button"
+                class="btn btn-download btn-block"
+                id="btn-download-results"
+              >
+                <svg
+                  class="icon download-icon-accent"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download Test Results
+              </button>
+            </div>
+          </aside>
+
+          <!-- Col 2: Active Tab Content Area -->
+          <main class="analytics-content-col">
+            <!-- Sub-view 1: Question Review -->
+            <div id="tab-question-review" class="analytics-subtab active">
+              <div class="review-question-card" id="review-card-container">
+                <div class="review-card-header">
+                  <div class="review-q-title">
+                    <button
+                      type="button"
+                      class="btn-icon review-card-nav-btn"
+                      id="btn-review-prev-q"
+                      title="Previous Question"
+                    >
+                      <svg
+                        class="icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                      >
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                      </svg>
+                    </button>
+                    <span id="review-q-num" class="bold-text"
+                      >Question No. 1</span
+                    >
+                    <span id="review-q-status-badge" class="badge"
+                      >Unattempted</span
+                    >
+                    <button
+                      type="button"
+                      class="btn-icon review-card-nav-btn"
+                      id="btn-review-next-q"
+                      title="Next Question"
+                    >
+                      <svg
+                        class="icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                      >
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="card-action-icons">
+                    <span
+                      id="review-bookmark-icon"
+                      class="icon-bookmark"
+                      title="Marked for Review Status"
+                    >
+                      <svg
+                        class="icon"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path
+                          d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
+                        ></path>
+                      </svg>
+                    </span>
+                    <button
+                      type="button"
+                      class="btn-icon"
+                      id="btn-copy-question"
+                      title="Copy Question Details"
+                    >
+                      <svg
+                        class="icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <rect
+                          x="9"
+                          y="9"
+                          width="13"
+                          height="13"
+                          rx="2"
+                          ry="2"
+                        ></rect>
+                        <path
+                          d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                        ></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="review-q-text" id="review-q-text"></div>
+                <div class="review-options-list" id="review-options-list"></div>
+
+                <div class="explanation-box">
+                  <h4 class="explanation-title">
+                    <svg
+                      class="icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="16" x2="12" y2="12"></line>
+                      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    Explanation &amp; Clinical Correlate
+                  </h4>
+                  <div
+                    id="review-explanation-text"
+                    class="explanation-content"
+                  ></div>
+                </div>
+
+                <div class="tag-pills-container" id="review-tag-pills"></div>
+              </div>
+            </div>
+
+            <!-- Sub-view 2: General Generic Analytics Tables & Visual Charts Container -->
+            <div id="tab-analytics-generic" class="analytics-subtab hidden">
+              <div class="analytics-header-banner">
+                <h3 id="generic-tab-title">Category Breakdown</h3>
+                <p id="generic-tab-desc" class="muted-text">
+                  Click any row or bar to immediately review corresponding
+                  questions.
+                </p>
+              </div>
+              <div class="table-responsive">
+                <table class="analytics-data-table" id="analytics-table">
+                  <thead></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <div
+                class="visual-charts-wrapper"
+                id="analytics-chart-container"
+              ></div>
+            </div>
+          </main>
+
+          <!-- Col 3: Review Filter & Mini-Palette -->
+          <aside class="analytics-filter-col">
+            <div class="filter-panel-header">
+              <h3>Filter Questions</h3>
+              <button
+                type="button"
+                class="btn-text-only btn-reset-filters"
+                id="btn-reset-filters"
+                disabled
+              >
+                <svg
+                  class="icon"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="1 4 1 10 7 10"></polyline>
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+                Reset
+              </button>
+            </div>
+
+            <div class="filter-controls-group">
+              <div class="form-group">
+                <label for="filter-result">Result Status</label>
+                <select id="filter-result" class="form-select">
+                  <option value="all">All Results</option>
+                  <option value="correct">Correct</option>
+                  <option value="incorrect">Incorrect</option>
+                  <option value="unattempted">Unattempted</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="filter-marked">Marked for Review</label>
+                <select id="filter-marked" class="form-select">
+                  <option value="all">All</option>
+                  <option value="marked">Marked Only</option>
+                  <option value="not_marked">Unmarked Only</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="filter-section">Section</label>
+                <select id="filter-section" class="form-select">
+                  <option value="all">All Sections</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="filter-subject">Subject</label>
+                <select id="filter-subject" class="form-select">
+                  <option value="all">All Subjects</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="filter-system">System</label>
+                <select id="filter-system" class="form-select">
+                  <option value="all">All Systems</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="filter-format">Question Format</label>
+                <select id="filter-format" class="form-select">
+                  <option value="all">All Formats</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="filter-difficulty">Difficulty Level</label>
+                <select id="filter-difficulty" class="form-select">
+                  <option value="all">All Difficulties</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mini-palette-container">
+              <div class="mini-palette-header">
+                <span
+                  >Filtered Questions (<span id="filtered-count-display">0</span
+                  >)</span
+                >
+              </div>
+              <div class="mini-palette-grid" id="review-mini-palette"></div>
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-outline btn-block mt-3"
+              id="btn-copy-all-filtered"
+            >
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path
+                  d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                ></path>
+              </svg>
+              Copy Filtered Questions
+            </button>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal Component for Warnings / Confirmations -->
+    <div id="modal-container" class="modal-backdrop hidden">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3 id="modal-title">Confirmation</h3>
+        </div>
+        <div class="modal-body" id="modal-body">
+          Are you sure you want to proceed?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="modal-btn-cancel">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" id="modal-btn-confirm">
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
